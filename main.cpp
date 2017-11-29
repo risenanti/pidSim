@@ -24,13 +24,13 @@ void printTimHandle(long long int tim, processValues &inst, std::ofstream &file)
 int main()
 {
 	/*PID Variables*/
-	#define kp 18.00
+	#define kp 16.00
 	#define ki 0.00
 	#define kd 0.00
 
 	processValues instance;
 
-	instance.setPoint = 500000;
+	instance.setPoint = 50000;
 	instance.processVariable = 100;
 
 	instance.myPID.SetTunings(kp, ki, kd);
@@ -57,12 +57,12 @@ int main()
 
 void transducerOutput(processValues &inst)
 {
-	inst.processVariable+=1*inst.pidOut;
+	inst.processVariable+=.1*inst.pidOut;
 }
 
 void processDecay(processValues &inst)
 {
-	inst.processVariable = inst.processVariable-0.00001;
+	inst.processVariable = inst.processVariable-10.0;
 }
 
 void printTimHandle(long long int tim, processValues &inst, std::ofstream &file)
