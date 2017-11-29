@@ -1,14 +1,20 @@
+/*Keith Conley
+ * USM
+ * Fall 2017
+ * */
+
 #include "pid.h"
-#define dt 0.1;
+
+/*500hz*/
+#define dt 0.01
 
 double PID::getPID(double error)
 {
 	double output;
-	double timeChange = dt;
 	kpTerm = kp*error;
 	
 	/*Compute and bound integral*/
-	errSum += (error*timeChange);
+	errSum += (error*dt);
 	kiTerm = errSum * ki;
 	if (kiTerm>iMax)
 	{
@@ -19,7 +25,7 @@ double PID::getPID(double error)
 		kiTerm = -iMax;
 	}
 	
-	kdTerm = (error - lastErr) / timeChange;
+	kdTerm = (error - lastErr) / dt;
 	
 	output = kpTerm+kiTerm+kdTerm;
 	lastErr = error;
@@ -30,24 +36,17 @@ double PID::getPID(double error)
 PID::PID()
 {
 	kp =0; ki =0; kd = 0;
+
+	kpTerm = 0;
+	kiTerm = 0;
+	kdTerm=0;
+
+	errSum = 0;
+	lastErr = 0;
+
+	iMax = 0;
 }
 
-void PID::Compute(void)
-{
-   /*How long since we last calculated*/
-   double timeChange = dt;
-  
-   /*Compute all the working error variables*/
-   double error = Setpoint - Input;
-   errSum += (error * timeChange);
-   double dErr = (error - lastErr) / timeChange;
-  
-   /*Compute PID Output*/
-   Output = kp * error + ki * errSum + kd * dErr;
-  
-   /*Remember some variables for next time*/
-   lastErr = error;
-}
   
 void PID::SetTunings(double Kp, double Ki, double Kd)
 {

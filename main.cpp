@@ -1,107 +1,96 @@
 #include <iostream>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
-#include "pid/pid.h"
 #include <fstream>
+#include "pid/pid.h"
+using namespace std;
 
-/*file operations*/
-std::ofstream file;
+#define FILENAME "kpOut.txt"
 
-long long int tim = 0;
-
-void createPidTim(void);
-void printTimHandle();
-void processDecay();
-
-void pidHandler(int signum);
-
-/*variables for output values*/
-double processVariable = 100;
-void transducerOutput(double output);
 #define outputMAX 1000
 
-/*PID Variables*/
-PID myPID;
-double pidOut;
-#define kp 100
-#define ki 50.00
-#define kd 0.00
-
-double setPoint;
-
-int main(void)
+/*variables for output values*/
+struct processValues
 {
-	file.open("kiOut.txt", std::ofstream::out);
-	myPID.SetTunings(kp, ki, kd);
-	myPID.setImax(1000.00);
-	setPoint = 500000;
+	double processVariable; /*starting value*/
+	double pidOut;
+	double setPoint;
+	PID myPID;
+};
 
-	createPidTim();
+void processDecay(processValues &inst);
+void transducerOutput(processValues &inst);
+void pidHandler(processValues &inst, std::ofstream &file);
+void printTimHandle(long long int tim, processValues &inst, std::ofstream &file);
+
+int main()
+{
+	/*PID Variables*/
+	#define kp 18.00
+	#define ki 0.00
+	#define kd 0.00
+
+	processValues instance;
+
+	instance.setPoint = 500000;
+	instance.processVariable = 100;
+
+	instance.myPID.SetTunings(kp, ki, kd);
+	instance.myPID.setImax(1000.00);
+
+	/*File ops*/
+	std::ofstream file;
+	file.open(FILENAME, std::ofstream::out);
 
 	while(1)
-	{}
+	{
+		static long long int i = 0;
+		++i;
+		if (i>100000)
+		{
+			file.close();
+			break;
+		}
+		pidHandler(instance, file);
+	}
 
 	return 0;
 }
 
-void pidHandler(int signum)
+void transducerOutput(processValues &inst)
 {
-	++tim;
+	inst.processVariable+=1*inst.pidOut;
+}
+
+void processDecay(processValues &inst)
+{
+	inst.processVariable = inst.processVariable-0.00001;
+}
+
+void printTimHandle(long long int tim, processValues &inst, std::ofstream &file)
+{
+	cout<< "TIME IS: "<<tim<<" Process Variable is: "<<inst.processVariable <<" Setpoint is: " << inst.setPoint<<'\n';
+	file<<"TIME="<<tim<<" processVariable="<<inst.processVariable<<" Setpoint="<<inst.setPoint<<std::endl;
+}
+
+void pidHandler(processValues &inst, std::ofstream &file)
+{
+	static long long int tim = 0;
+	tim++;
 
 	if (tim%3==0)
 	{
-		processDecay();
-		transducerOutput(pidOut);
+		processDecay(inst);
+		transducerOutput(inst);
 	}
 	if (tim%4==0)
 	{
-		pidOut = myPID.getPID(setPoint-processVariable);
-		if (pidOut>outputMAX)
+		inst.pidOut = inst.myPID.getPID(inst.setPoint-inst.processVariable);
+		if (inst.pidOut>outputMAX)
 		{
-			pidOut=outputMAX;
+			inst.pidOut=outputMAX;
 		}
 	}
 	if (tim%8==0)
 	{
-		printTimHandle();
-		file<<"TIME="<<tim<<" processVariable="<<processVariable<<" Setpoint="<<setPoint<<std::endl;
+		printTimHandle(tim, inst, file);
 	}
-}
-
-void createPidTim(void)
-{
-	struct sigaction sa;
-	struct itimerval timer;
-
-	/* Install timer_handler as the signal handler for SIGVTALRM. */
-	memset (&sa, 0, sizeof (sa));
-	sa.sa_handler = &pidHandler;
-	sigaction (SIGVTALRM, &sa, NULL);
-
-	/* Configure the timer to expire after 100 msec... */
-	timer.it_value.tv_sec = 0;
-	timer.it_value.tv_usec = 5000;
-	/* ... and every 250 msec after that. */
-	timer.it_interval.tv_sec = 0;
-	timer.it_interval.tv_usec = 5000;
-	/* Start a virtual timer. It counts down whenever this process is
-	   executing. */
-	setitimer (ITIMER_VIRTUAL, &timer, NULL);
-}
-
-void transducerOutput(double output)
-{
-	processVariable+=1*output;
-}
-
-void processDecay()
-{
-	processVariable = processVariable-0.00001;
-}
-
-void printTimHandle()
-{
-	std::cout<<"Process Variable is: "<<processVariable <<" Setpoint is: " << setPoint<<'\n';
 }
