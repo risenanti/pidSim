@@ -3,7 +3,7 @@
 #include "pid/pid.h"
 using namespace std;
 
-#define FILENAME "kpOut.txt"
+#define FILENAME "kpkiOut.txt"
 
 #define outputMAX 1000
 
@@ -25,7 +25,7 @@ int main()
 {
 	/*PID Variables*/
 	#define kp 200.00
-	#define ki 0.00
+	#define ki 50.00
 	#define kd 0.00
 
 	processValues instance;

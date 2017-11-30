@@ -1,9 +1,14 @@
+/*Keith Conley
+ * Fall 2017
+ * CSC 513
+ * Algorithms
+ ************/
 #include <iostream>
 #include <fstream>
 #include "pid/pid.h"
 using namespace std;
 
-#define FILENAME "kpkiOut.txt"
+#define FILENAME "kpkikdOut.txt"
 
 #define outputMAX 1000
 
@@ -24,9 +29,9 @@ void printTimHandle(long long int tim, processValues &inst, std::ofstream &file)
 int main()
 {
 	/*PID Variables*/
-	#define kp 16.00
-	#define ki 15.00
-	#define kd 0.00
+	#define kp 200.00
+	#define ki 50.00
+	#define kd 50.00
 
 	processValues instance;
 
@@ -44,7 +49,7 @@ int main()
 	{
 		static long long int i = 0;
 		++i;
-		if (i>100000)
+		if (i>10000)
 		{
 			file.close();
 			break;
@@ -57,7 +62,7 @@ int main()
 
 void transducerOutput(processValues &inst)
 {
-	inst.processVariable+=.1*inst.pidOut;
+	inst.processVariable+=.089*inst.pidOut;
 }
 
 void processDecay(processValues &inst)
@@ -80,6 +85,7 @@ void pidHandler(processValues &inst, std::ofstream &file)
 	{
 		processDecay(inst);
 		transducerOutput(inst);
+		printTimHandle(tim, inst, file);
 	}
 	if (tim%4==0)
 	{
@@ -88,9 +94,9 @@ void pidHandler(processValues &inst, std::ofstream &file)
 		{
 			inst.pidOut=outputMAX;
 		}
-	}
-	if (tim%8==0)
-	{
-		printTimHandle(tim, inst, file);
+		if (inst.pidOut<0.00)
+		{
+			inst.pidOut=0.00;
+		}
 	}
 }
